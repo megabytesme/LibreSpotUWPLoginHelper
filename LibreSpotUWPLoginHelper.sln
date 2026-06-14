@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11828.311 oobstable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibreSpotUWPLoginHelper", "LibreSpotUWPLoginHelper.csproj", "{D1AE4A96-2522-75F2-AA9E-4985449A2E97}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D1AE4A96-2522-75F2-AA9E-4985449A2E97}.Debug|x64.ActiveCfg = Debug|x64
+		{D1AE4A96-2522-75F2-AA9E-4985449A2E97}.Debug|x64.Build.0 = Debug|x64
+		{D1AE4A96-2522-75F2-AA9E-4985449A2E97}.Release|x64.ActiveCfg = Release|x64
+		{D1AE4A96-2522-75F2-AA9E-4985449A2E97}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72FCCFB8-C5F0-4CEC-884D-715EF170CABF}
+	EndGlobalSection
+EndGlobal
