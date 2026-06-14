@@ -25,13 +25,12 @@
         </controls:TitleBar>
 
         <Grid Grid.Row="1">
-            <FlipView
-                x:Name="OobeFlipView"
-                Background="Transparent"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                ManipulationMode="None">
-                <FlipViewItem>
+            <Grid
+                x:Name="PageHost"
+                Background="Transparent">
+                <Grid
+                    x:Name="WelcomePage"
+                    Visibility="Visible">
                     <Border
                         MaxWidth="580"
                         Margin="24"
@@ -70,7 +69,9 @@
                                             Text="Note: This app is only able to generate a QR Code for logging in. If you are looking for the LibreSpotUWP app, you can find it here:"
                                             TextWrapping="Wrap" />
                                         <HyperlinkButton
+                                            x:Name="ProjectLinkButton"
                                             HorizontalAlignment="Left"
+                                            Click="ProjectLinkButton_Click"
                                             Content="megabytesme/LibreSpotUWP" />
                                     </StackPanel>
                                 </StackPanel>
@@ -89,9 +90,11 @@
                             </Grid>
                         </Grid>
                     </Border>
-                </FlipViewItem>
+                </Grid>
 
-                <FlipViewItem>
+                <Grid
+                    x:Name="SpotifyLoginPage"
+                    Visibility="Collapsed">
                     <Border
                         MaxWidth="580"
                         Margin="24"
@@ -165,9 +168,11 @@
                             </Grid>
                         </Grid>
                     </Border>
-                </FlipViewItem>
+                </Grid>
 
-                <FlipViewItem>
+                <Grid
+                    x:Name="QrLoginPage"
+                    Visibility="Collapsed">
                     <Border
                         MaxWidth="760"
                         Margin="24"
@@ -257,8 +262,8 @@
                             </Grid>
                         </Grid>
                     </Border>
-                </FlipViewItem>
-            </FlipView>
+                </Grid>
+            </Grid>
 
             <Grid
                 x:Name="QrOverlay"

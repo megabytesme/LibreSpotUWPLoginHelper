@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -16,11 +17,14 @@ namespace LibreSpotUWPLoginHelper;
 public sealed partial class MainWindow : Window
 {
     private const string SpotifyClientId = "203834fb201e47df89a18d8291b5dea1";
+    private const string ProjectUrl = "https://github.com/megabytesme/LibreSpotUWP";
+    private const int PageCount = 3;
     private readonly SpotifyAuthBroker _authBroker = new();
     private readonly SpotifyTokenExchangeService _tokenExchangeService = new();
     private CancellationTokenSource? _authCancellationTokenSource;
     private SpotifyAuthResult? _authResult;
     private QrAuthState? _qrAuthState;
+    private int _currentPageIndex;
 
     public MainWindow()
     {
@@ -28,18 +32,19 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(HelperTitleBar);
         TryApplyWindowIcon();
+        ShowPage(0);
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        if (OobeFlipView.SelectedIndex > 0)
-            OobeFlipView.SelectedIndex--;
+        if (_currentPageIndex > 0)
+            ShowPage(_currentPageIndex - 1);
     }
 
     private void NextButton_Click(object sender, RoutedEventArgs e)
     {
-        if (OobeFlipView.SelectedIndex < OobeFlipView.Items.Count - 1)
-            OobeFlipView.SelectedIndex++;
+        if (_currentPageIndex < PageCount - 1)
+            ShowPage(_currentPageIndex + 1);
     }
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
@@ -64,7 +69,7 @@ public sealed partial class MainWindow : Window
             QrOverlayImage.Source = qrImage;
 
             LoginNextButton.IsEnabled = true;
-            SetLoginStatus("Spotify connected", "Spotify sign-in completed and the QR code now contains the same auth-state shape LibreSpotUWP imports from scanner login.", InfoBarSeverity.Success);
+            SetLoginStatus("Spotify connected", "Spotify sign-in completed, ready to continue.", InfoBarSeverity.Success);
         }
         catch (Exception ex)
         {
@@ -93,6 +98,15 @@ public sealed partial class MainWindow : Window
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void ProjectLinkButton_Click(object sender, RoutedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = ProjectUrl,
+            UseShellExecute = true
+        });
     }
 
     private void SetLoginStatus(string title, string message, InfoBarSeverity severity)
@@ -148,6 +162,14 @@ public sealed partial class MainWindow : Window
     {
         QrOverlayHost.Width = Math.Max(Bounds.Width * 0.8, 320);
         QrOverlayHost.Height = Math.Max(Bounds.Height * 0.8, 320);
+    }
+
+    private void ShowPage(int pageIndex)
+    {
+        _currentPageIndex = Math.Max(0, Math.Min(PageCount - 1, pageIndex));
+        WelcomePage.Visibility = _currentPageIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
+        SpotifyLoginPage.Visibility = _currentPageIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        QrLoginPage.Visibility = _currentPageIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void TryApplyWindowIcon()
