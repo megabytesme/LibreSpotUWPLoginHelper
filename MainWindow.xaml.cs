@@ -133,6 +133,7 @@ public sealed partial class MainWindow : Window
                 "user-top-read",
                 "user-library-read",
                 "user-read-playback-state",
+                "user-modify-playback-state",
                 "user-read-currently-playing",
                 "user-follow-read"
             });

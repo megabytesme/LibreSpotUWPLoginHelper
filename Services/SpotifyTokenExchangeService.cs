@@ -26,7 +26,8 @@ internal sealed class SpotifyTokenExchangeService
             RefreshToken = response.RefreshToken ?? string.Empty,
             ExpiresAt = capturedAt.AddSeconds(response.ExpiresIn),
             LastTokenRefreshAt = capturedAt,
-            RefreshTokenExpiresAt = TryGetRefreshTokenExpiresAt(response, capturedAt)
+            RefreshTokenExpiresAt = TryGetRefreshTokenExpiresAt(response, capturedAt),
+            ScopeVersion = 2
         };
     }
 
