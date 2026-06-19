@@ -16,7 +16,7 @@ namespace LibreSpotUWPLoginHelper;
 
 public sealed partial class MainWindow : Window
 {
-    private const string SpotifyClientId = "782ae96ea60f4cdf986a766049607005";
+    private const string DefaultSpotifyClientId = "782ae96ea60f4cdf986a766049607005";
     private const string ProjectUrl = "https://github.com/megabytesme/LibreSpotUWP";
     private const int PageCount = 3;
     private readonly SpotifyAuthBroker _authBroker = new();
@@ -24,6 +24,7 @@ public sealed partial class MainWindow : Window
     private CancellationTokenSource? _authCancellationTokenSource;
     private SpotifyAuthResult? _authResult;
     private QrAuthState? _qrAuthState;
+    private string? _authorizedClientId;
     private int _currentPageIndex;
 
     public MainWindow()
@@ -32,6 +33,7 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(HelperTitleBar);
         TryApplyWindowIcon();
+        SpotifyCustomClientIdTextBox.Text = HelperSettings.SpotifyCustomClientId;
         ShowPage(0);
     }
 
@@ -56,12 +58,14 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            var clientId = ResolveSpotifyClientId();
             SetLoginStatus("Opening browser", "Opening Spotify in your default browser and waiting for sign-in to complete.", InfoBarSeverity.Informational);
 
-            _authResult = await _authBroker.RunBrowserFlowAsync(BuildSpotifyAuthOptions(), _authCancellationTokenSource.Token);
+            _authResult = await _authBroker.RunBrowserFlowAsync(BuildSpotifyAuthOptions(clientId), _authCancellationTokenSource.Token);
             SetLoginStatus("Finalizing session", "Spotify sign-in completed. Exchanging the authorization code for a QR-importable session.", InfoBarSeverity.Informational);
 
-            _qrAuthState = await _tokenExchangeService.ExchangeCodeAsync(SpotifyClientId, _authResult);
+            _qrAuthState = await _tokenExchangeService.ExchangeCodeAsync(clientId, _authResult);
+            _authorizedClientId = clientId;
             var qrPayload = BuildQrPayload(_qrAuthState);
 
             var qrImage = await CreateQrImageAsync(qrPayload);
@@ -151,10 +155,38 @@ public sealed partial class MainWindow : Window
         LoginStatusInfoBar.IsOpen = true;
     }
 
-    private static SpotifyAuthOptions BuildSpotifyAuthOptions()
+    private void SpotifyCustomClientIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        HelperSettings.SpotifyCustomClientId = SpotifyCustomClientIdTextBox.Text;
+
+        if (string.IsNullOrWhiteSpace(_authorizedClientId) ||
+            string.Equals(_authorizedClientId, ResolveSpotifyClientId(), StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _authResult = null;
+        _qrAuthState = null;
+        _authorizedClientId = null;
+        QrCodeImage.Source = null;
+        QrOverlayImage.Source = null;
+        LoginNextButton.IsEnabled = false;
+        SetLoginStatus(
+            "Sign-in required",
+            "The Spotify client ID changed. Sign in again to generate a QR code with the selected client ID.",
+            InfoBarSeverity.Informational);
+    }
+
+    private string ResolveSpotifyClientId()
+    {
+        var customClientId = SpotifyCustomClientIdTextBox.Text?.Trim();
+        return string.IsNullOrWhiteSpace(customClientId) ? DefaultSpotifyClientId : customClientId;
+    }
+
+    private static SpotifyAuthOptions BuildSpotifyAuthOptions(string clientId)
     {
         return new SpotifyAuthOptions(
-            SpotifyClientId,
+            clientId,
             new[]
             {
                 "user-read-email",

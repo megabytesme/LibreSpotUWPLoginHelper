@@ -127,6 +127,21 @@
                                         Text="To continue, press &quot;Login with Spotify&quot;. This will grant the app the ability to generate a QR code to scan on your device."
                                         TextWrapping="Wrap" />
 
+                                    <TextBox
+                                        x:Name="SpotifyCustomClientIdTextBox"
+                                        Margin="0,20,0,0"
+                                        Header="Custom Spotify Client ID"
+                                        MaxLength="64"
+                                        PlaceholderText="Optional, advanced users only"
+                                        TextChanged="SpotifyCustomClientIdTextBox_TextChanged" />
+
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="Optional and recommended only for advanced users. If you use a custom Spotify app/client ID, enter it here before logging in and configure its redirect URI as http://127.0.0.1:8898/login. Leave empty to use the default helper client ID."
+                                        TextWrapping="WrapWholeWords" />
+
                                     <controls:InfoBar
                                         x:Name="LoginStatusInfoBar"
                                         Margin="0,20,0,0"
