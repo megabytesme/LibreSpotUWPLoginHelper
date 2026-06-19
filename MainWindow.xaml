@@ -239,11 +239,17 @@
                                             Text="Press the QR Code if it is too small"
                                             TextWrapping="Wrap" />
 
+                                        <Button
+                                            x:Name="ExportTextButton"
+                                            HorizontalAlignment="Center"
+                                            Click="ExportTextButton_Click"
+                                            Content="Export sign-in details as text" />
+
                                         <TextBlock
                                             MaxWidth="560"
                                             HorizontalAlignment="Center"
                                             Style="{StaticResource BodyTextStyle}"
-                                            Text="Warning: Do not share the generated QR Code with anyone! Only use it to scan within LibreSpotUWP."
+                                            Text="Warning: Do not share the generated QR Code or sign-in details text with anyone! Only use them with your own LibreSpotUWP devices."
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </StackPanel>

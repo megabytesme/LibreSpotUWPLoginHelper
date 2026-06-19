@@ -24,10 +24,11 @@ internal sealed class SpotifyTokenExchangeService
         {
             AccessToken = response.AccessToken,
             RefreshToken = response.RefreshToken ?? string.Empty,
+            ClientId = clientId,
             ExpiresAt = capturedAt.AddSeconds(response.ExpiresIn),
             LastTokenRefreshAt = capturedAt,
             RefreshTokenExpiresAt = TryGetRefreshTokenExpiresAt(response, capturedAt),
-            ScopeVersion = 3
+            ScopeVersion = 4
         };
     }
 

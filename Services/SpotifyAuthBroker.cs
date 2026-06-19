@@ -9,7 +9,7 @@ namespace LibreSpotUWPLoginHelper.Services;
 
 internal sealed class SpotifyAuthBroker
 {
-    private const int LoopbackPort = 43821;
+    private const int LoopbackPort = 8898;
     private SpotifyPkceRequest? _pendingRequest;
 
     public SpotifyPkceRequest CreateRequest(SpotifyAuthOptions options)

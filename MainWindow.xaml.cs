@@ -16,7 +16,7 @@ namespace LibreSpotUWPLoginHelper;
 
 public sealed partial class MainWindow : Window
 {
-    private const string SpotifyClientId = "203834fb201e47df89a18d8291b5dea1";
+    private const string SpotifyClientId = "782ae96ea60f4cdf986a766049607005";
     private const string ProjectUrl = "https://github.com/megabytesme/LibreSpotUWP";
     private const int PageCount = 3;
     private readonly SpotifyAuthBroker _authBroker = new();
@@ -88,6 +88,40 @@ public sealed partial class MainWindow : Window
 
         UpdateOverlaySize();
         QrOverlay.Visibility = Visibility.Visible;
+    }
+
+    private async void ExportTextButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_qrAuthState is null)
+            return;
+
+        var textBox = new TextBox
+        {
+            Text = BuildQrPayload(_qrAuthState),
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            IsReadOnly = true,
+            Height = 260
+        };
+
+        var content = new StackPanel();
+        content.Children.Add(new TextBlock
+        {
+            Text = "This text contains the same sign-in details as the QR code. Only paste it into your own LibreSpotUWP devices.",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+        content.Children.Add(textBox);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Export Sign-in Details",
+            Content = content,
+            PrimaryButtonText = "Close"
+        };
+
+        await dialog.ShowAsync();
     }
 
     private void CloseQrOverlayButton_Click(object sender, RoutedEventArgs e)
