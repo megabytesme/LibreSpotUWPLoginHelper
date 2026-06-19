@@ -11,4 +11,5 @@ internal sealed class QrAuthState
     public DateTimeOffset? LastTokenRefreshAt { get; set; }
     public DateTimeOffset? RefreshTokenExpiresAt { get; set; }
     public int ScopeVersion { get; set; }
+    public int AuthVersion { get; set; }
 }

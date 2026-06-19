@@ -8,6 +8,9 @@ namespace LibreSpotUWPLoginHelper.Services;
 
 internal sealed class SpotifyTokenExchangeService
 {
+    private const int CurrentScopeVersion = 4;
+    private const int CurrentAuthVersion = 1;
+
     public async Task<QrAuthState> ExchangeCodeAsync(string clientId, SpotifyAuthResult authResult)
     {
         var request = new PKCETokenRequest(
@@ -28,7 +31,8 @@ internal sealed class SpotifyTokenExchangeService
             ExpiresAt = capturedAt.AddSeconds(response.ExpiresIn),
             LastTokenRefreshAt = capturedAt,
             RefreshTokenExpiresAt = TryGetRefreshTokenExpiresAt(response, capturedAt),
-            ScopeVersion = 4
+            ScopeVersion = CurrentScopeVersion,
+            AuthVersion = CurrentAuthVersion
         };
     }
 
