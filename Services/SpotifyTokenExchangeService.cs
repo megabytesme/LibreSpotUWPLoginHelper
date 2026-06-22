@@ -23,6 +23,8 @@ internal sealed class SpotifyTokenExchangeService
         var response = await oauth.RequestToken(request);
         var capturedAt = DateTimeOffset.UtcNow;
 
+        await SpotifyAccountEligibilityService.EnsurePremiumAsync(response.AccessToken);
+
         return new QrAuthState
         {
             AccessToken = response.AccessToken,

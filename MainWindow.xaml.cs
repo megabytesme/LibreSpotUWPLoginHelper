@@ -77,7 +77,15 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            SetLoginStatus("Sign-in incomplete", ex.Message, InfoBarSeverity.Warning);
+            if (ex is SpotifyPremiumRequiredException premiumRequired)
+            {
+                SetLoginStatus("Spotify Premium required", premiumRequired.Message, InfoBarSeverity.Warning);
+                await ShowPremiumRequiredDialogAsync(premiumRequired);
+            }
+            else
+            {
+                SetLoginStatus("Sign-in incomplete", ex.Message, InfoBarSeverity.Warning);
+            }
         }
         finally
         {
@@ -153,6 +161,42 @@ public sealed partial class MainWindow : Window
         LoginStatusInfoBar.Message = message;
         LoginStatusInfoBar.Severity = severity;
         LoginStatusInfoBar.IsOpen = true;
+    }
+
+    private async System.Threading.Tasks.Task ShowPremiumRequiredDialogAsync(SpotifyPremiumRequiredException exception)
+    {
+        var content = new StackPanel();
+        content.Children.Add(new TextBlock
+        {
+            Text = exception.Message,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+
+        var linkButton = new HyperlinkButton
+        {
+            Content = "View Spotify Premium",
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        linkButton.Click += (sender, args) =>
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = SpotifyPremiumRequiredException.PremiumUrl,
+                UseShellExecute = true
+            });
+        };
+        content.Children.Add(linkButton);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Spotify Premium required",
+            Content = content,
+            PrimaryButtonText = "Close"
+        };
+
+        await dialog.ShowAsync();
     }
 
     private void SpotifyCustomClientIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
