@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
 {
     private const string DefaultSpotifyClientId = "782ae96ea60f4cdf986a766049607005";
     private const string ProjectUrl = "https://github.com/megabytesme/LibreSpotUWP";
+    private const string AudioKeyIssueUrl = "https://github.com/librespot-org/librespot/issues/1649";
     private const int PageCount = 3;
     private readonly SpotifyAuthBroker _authBroker = new();
     private readonly SpotifyTokenExchangeService _tokenExchangeService = new();
@@ -58,6 +59,12 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!await ShowAudioKeyCompatibilityWarningAsync())
+            {
+                SetLoginStatus("Sign-in cancelled", "Spotify sign-in was not started.", InfoBarSeverity.Informational);
+                return;
+            }
+
             var clientId = ResolveSpotifyClientId();
             SetLoginStatus("Opening browser", "Opening Spotify in your default browser and waiting for sign-in to complete.", InfoBarSeverity.Informational);
 
@@ -197,6 +204,55 @@ public sealed partial class MainWindow : Window
         };
 
         await dialog.ShowAsync();
+    }
+
+    private async System.Threading.Tasks.Task<bool> ShowAudioKeyCompatibilityWarningAsync()
+    {
+        var content = new StackPanel();
+        content.Children.Add(new TextBlock
+        {
+            Text =
+                "Some Spotify accounts created after 2024 may sign in successfully but still be unable to play music. " +
+                "Spotify appears to require a newer audio-key protection/DRM flow for some accounts, and that flow " +
+                "has not yet been reverse-engineered or implemented in librespot.",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+        content.Children.Add(new TextBlock
+        {
+            Text =
+                "Spotify does not expose an account creation date to the Login Helper, so it cannot determine in " +
+                "advance whether this account is affected. You can continue, but playback is not guaranteed.",
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+
+        var issueLink = new HyperlinkButton
+        {
+            Content = "Open librespot audio-key issue #1649",
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        issueLink.Click += (sender, args) =>
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = AudioKeyIssueUrl,
+                UseShellExecute = true
+            });
+        };
+        content.Children.Add(issueLink);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Spotify account compatibility warning",
+            Content = content,
+            PrimaryButtonText = "Continue",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
     private void SpotifyCustomClientIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
