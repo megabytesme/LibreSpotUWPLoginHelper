@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using LibreSpotUWPLoginHelper.Models;
 using SpotifyAPI.Web;
@@ -11,7 +14,12 @@ internal sealed class SpotifyTokenExchangeService
     private const int CurrentScopeVersion = 4;
     private const int CurrentAuthVersion = 1;
 
-    public async Task<QrAuthState> ExchangeCodeAsync(string clientId, SpotifyAuthResult authResult)
+    private static readonly HttpClient HttpClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(30)
+    };
+
+    public async Task<WebAuthorizationResult> ExchangeCodeAsync(string clientId, SpotifyAuthResult authResult)
     {
         var request = new PKCETokenRequest(
             clientId,
@@ -23,9 +31,9 @@ internal sealed class SpotifyTokenExchangeService
         var response = await oauth.RequestToken(request);
         var capturedAt = DateTimeOffset.UtcNow;
 
-        await SpotifyAccountEligibilityService.EnsurePremiumAsync(response.AccessToken);
+        var accountId = await SpotifyAccountEligibilityService.GetPremiumAccountIdAsync(response.AccessToken);
 
-        return new QrAuthState
+        return new WebAuthorizationResult(new QrAuthState
         {
             AccessToken = response.AccessToken,
             RefreshToken = response.RefreshToken ?? string.Empty,
@@ -35,6 +43,46 @@ internal sealed class SpotifyTokenExchangeService
             RefreshTokenExpiresAt = TryGetRefreshTokenExpiresAt(response, capturedAt),
             ScopeVersion = CurrentScopeVersion,
             AuthVersion = CurrentAuthVersion
+        }, accountId);
+    }
+
+    public async Task<PlaybackAuthorizationPackage> ExchangePlaybackCodeAsync(
+        string clientId,
+        SpotifyAuthResult authResult)
+    {
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = authResult.Code,
+            ["redirect_uri"] = authResult.RedirectUri,
+            ["client_id"] = clientId,
+            ["code_verifier"] = authResult.CodeVerifier
+        });
+        using var response = await HttpClient.PostAsync("https://accounts.spotify.com/api/token", content);
+        var json = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Spotify refused playback authorization ({(int)response.StatusCode}).");
+
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("access_token", out var tokenElement) ||
+            tokenElement.ValueKind != JsonValueKind.String ||
+            string.IsNullOrWhiteSpace(tokenElement.GetString()))
+        {
+            throw new InvalidOperationException("Spotify did not return a playback access token.");
+        }
+
+        var expiresIn = root.TryGetProperty("expires_in", out var expiresElement) &&
+            expiresElement.TryGetInt32(out var seconds)
+                ? seconds
+                : 3600;
+
+        return new PlaybackAuthorizationPackage
+        {
+            AuthVersion = CurrentAuthVersion,
+            Kind = "bootstrapToken",
+            AccessToken = tokenElement.GetString()!,
+            ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
         };
     }
 
@@ -53,3 +101,5 @@ internal sealed class SpotifyTokenExchangeService
         return null;
     }
 }
+
+internal sealed record WebAuthorizationResult(QrAuthState State, string AccountId);

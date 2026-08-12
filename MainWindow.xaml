@@ -124,7 +124,7 @@
                                 <StackPanel Spacing="0">
                                     <TextBlock
                                         Style="{StaticResource BodyTextStyle}"
-                                        Text="To continue, press &quot;Login with Spotify&quot;. This will grant the app the ability to generate a QR code to scan on your device."
+                                        Text="To continue, press &quot;Login with Spotify&quot;. Spotify may open twice: once for your library and once for playback authorization. Use the same Spotify account both times."
                                         TextWrapping="Wrap" />
 
                                     <TextBlock
@@ -156,7 +156,7 @@
                                         IsOpen="True"
                                         Severity="Informational"
                                         Title="Status"
-                                        Message="Waiting for Spotify sign-in." />
+                                        Message="Waiting for Spotify library and playback sign-in." />
                                 </StackPanel>
                             </ScrollViewer>
 

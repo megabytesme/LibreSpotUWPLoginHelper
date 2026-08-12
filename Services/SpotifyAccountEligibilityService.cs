@@ -9,9 +9,12 @@ namespace LibreSpotUWPLoginHelper.Services;
 internal static class SpotifyAccountEligibilityService
 {
     private const string SpotifyMeEndpoint = "https://api.spotify.com/v1/me";
-    private static readonly HttpClient HttpClient = new();
+    private static readonly HttpClient HttpClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(30)
+    };
 
-    public static async Task EnsurePremiumAsync(string accessToken)
+    public static async Task<string> GetPremiumAccountIdAsync(string accessToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
             throw new InvalidOperationException("Spotify did not return an access token.");
@@ -32,5 +35,14 @@ internal static class SpotifyAccountEligibilityService
 
         if (!string.Equals(product, "premium", StringComparison.OrdinalIgnoreCase))
             throw new SpotifyPremiumRequiredException(product);
+
+        document.RootElement.TryGetProperty("id", out var idElement);
+        var accountId = idElement.ValueKind == JsonValueKind.String
+            ? idElement.GetString()
+            : null;
+        if (string.IsNullOrWhiteSpace(accountId))
+            throw new InvalidOperationException("Spotify did not return an account identifier.");
+
+        return accountId;
     }
 }

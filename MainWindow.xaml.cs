@@ -17,6 +17,9 @@ namespace LibreSpotUWPLoginHelper;
 public sealed partial class MainWindow : Window
 {
     private const string DefaultSpotifyClientId = "782ae96ea60f4cdf986a766049607005";
+    private const string PlaybackClientId = "65b708073fc0480ea92a077233ca87bd";
+    private const int WebLoopbackPort = 8898;
+    private const int PlaybackLoopbackPort = 5588;
     private const string ProjectUrl = "https://github.com/megabytesme/LibreSpotUWP";
     private const string AudioKeyIssueUrl = "https://github.com/librespot-org/librespot/issues/1649";
     private const int PageCount = 3;
@@ -24,7 +27,7 @@ public sealed partial class MainWindow : Window
     private readonly SpotifyTokenExchangeService _tokenExchangeService = new();
     private CancellationTokenSource? _authCancellationTokenSource;
     private SpotifyAuthResult? _authResult;
-    private QrAuthState? _qrAuthState;
+    private LoginPackage? _loginPackage;
     private string? _authorizedClientId;
     private int _currentPageIndex;
 
@@ -54,6 +57,11 @@ public sealed partial class MainWindow : Window
     {
         LoginButton.IsEnabled = false;
         LoginNextButton.IsEnabled = false;
+        _authResult = null;
+        _loginPackage = null;
+        _authorizedClientId = null;
+        QrCodeImage.Source = null;
+        QrOverlayImage.Source = null;
         _authCancellationTokenSource?.Cancel();
         _authCancellationTokenSource = new CancellationTokenSource();
 
@@ -71,16 +79,37 @@ public sealed partial class MainWindow : Window
             _authResult = await _authBroker.RunBrowserFlowAsync(BuildSpotifyAuthOptions(clientId), _authCancellationTokenSource.Token);
             SetLoginStatus("Finalizing session", "Spotify sign-in completed. Exchanging the authorization code for a QR-importable session.", InfoBarSeverity.Informational);
 
-            _qrAuthState = await _tokenExchangeService.ExchangeCodeAsync(clientId, _authResult);
+            var webAuthorization = await _tokenExchangeService.ExchangeCodeAsync(clientId, _authResult);
+
+            SetLoginStatus(
+                "Authorizing playback",
+                "Spotify will open once more to grant playback access. Keep the same Spotify account selected.",
+                InfoBarSeverity.Informational);
+            var playbackResult = await _authBroker.RunBrowserFlowAsync(
+                BuildPlaybackAuthOptions(),
+                _authCancellationTokenSource.Token);
+            var playbackAuthorization = await _tokenExchangeService.ExchangePlaybackCodeAsync(
+                PlaybackClientId,
+                playbackResult);
+
+            _loginPackage = new LoginPackage
+            {
+                AccountId = webAuthorization.AccountId,
+                Web = webAuthorization.State,
+                Playback = playbackAuthorization
+            };
             _authorizedClientId = clientId;
-            var qrPayload = BuildQrPayload(_qrAuthState);
+            var qrPayload = BuildQrPayload(_loginPackage);
 
             var qrImage = await CreateQrImageAsync(qrPayload);
             QrCodeImage.Source = qrImage;
             QrOverlayImage.Source = qrImage;
 
             LoginNextButton.IsEnabled = true;
-            SetLoginStatus("Spotify connected", "Spotify sign-in completed, ready to continue.", InfoBarSeverity.Success);
+            SetLoginStatus(
+                "Spotify connected",
+                "Library access and playback authorization are ready to import.",
+                InfoBarSeverity.Success);
         }
         catch (Exception ex)
         {
@@ -111,12 +140,12 @@ public sealed partial class MainWindow : Window
 
     private async void ExportTextButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_qrAuthState is null)
+        if (_loginPackage is null)
             return;
 
         var textBox = new TextBox
         {
-            Text = BuildQrPayload(_qrAuthState),
+            Text = BuildQrPayload(_loginPackage),
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             IsReadOnly = true,
@@ -266,7 +295,7 @@ public sealed partial class MainWindow : Window
         }
 
         _authResult = null;
-        _qrAuthState = null;
+        _loginPackage = null;
         _authorizedClientId = null;
         QrCodeImage.Source = null;
         QrOverlayImage.Source = null;
@@ -293,8 +322,7 @@ public sealed partial class MainWindow : Window
                 "user-read-private",
                 "playlist-read-private",
                 "playlist-read-collaborative",
-                "streaming"
-                ,
+                "streaming",
                 "user-read-recently-played",
                 "user-top-read",
                 "user-library-read",
@@ -305,18 +333,27 @@ public sealed partial class MainWindow : Window
                 "user-modify-playback-state",
                 "user-read-currently-playing",
                 "user-follow-read"
-            });
+            },
+            WebLoopbackPort);
     }
 
-    private static string BuildQrPayload(QrAuthState authState)
+    private static SpotifyAuthOptions BuildPlaybackAuthOptions()
     {
-        return JsonSerializer.Serialize(authState);
+        return new SpotifyAuthOptions(
+            PlaybackClientId,
+            new[] { "streaming" },
+            PlaybackLoopbackPort);
+    }
+
+    private static string BuildQrPayload(LoginPackage package)
+    {
+        return JsonSerializer.Serialize(package);
     }
 
     private static async System.Threading.Tasks.Task<BitmapImage> CreateQrImageAsync(string payload)
     {
         using var generator = new QRCodeGenerator();
-        using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+        using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.M);
         var pngQr = new PngByteQRCode(data);
         var bytes = pngQr.GetGraphic(20);
 

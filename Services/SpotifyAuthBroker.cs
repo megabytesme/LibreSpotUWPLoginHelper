@@ -9,7 +9,6 @@ namespace LibreSpotUWPLoginHelper.Services;
 
 internal sealed class SpotifyAuthBroker
 {
-    private const int LoopbackPort = 8898;
     private SpotifyPkceRequest? _pendingRequest;
 
     public SpotifyPkceRequest CreateRequest(SpotifyAuthOptions options)
@@ -17,7 +16,7 @@ internal sealed class SpotifyAuthBroker
         if (string.IsNullOrWhiteSpace(options.ClientId))
             throw new InvalidOperationException("The Spotify client ID is missing from the helper configuration.");
 
-        var redirectUri = $"http://127.0.0.1:{LoopbackPort}{options.RedirectPath}";
+        var redirectUri = $"http://127.0.0.1:{options.LoopbackPort}{options.RedirectPath}";
         var codeVerifier = PkceUtility.CreateCodeVerifier();
         var codeChallenge = PkceUtility.CreateCodeChallenge(codeVerifier);
         var state = PkceUtility.CreateState();
