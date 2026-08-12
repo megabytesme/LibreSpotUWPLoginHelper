@@ -90,7 +90,8 @@ public sealed partial class MainWindow : Window
                 _authCancellationTokenSource.Token);
             var playbackAuthorization = await _tokenExchangeService.ExchangePlaybackCodeAsync(
                 PlaybackClientId,
-                playbackResult);
+                playbackResult,
+                webAuthorization.AccountId);
 
             _loginPackage = new LoginPackage
             {
@@ -341,7 +342,7 @@ public sealed partial class MainWindow : Window
     {
         return new SpotifyAuthOptions(
             PlaybackClientId,
-            new[] { "streaming" },
+            new[] { "streaming", "user-read-private" },
             PlaybackLoopbackPort);
     }
 

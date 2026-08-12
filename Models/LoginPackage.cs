@@ -5,7 +5,7 @@ namespace LibreSpotUWPLoginHelper.Models;
 internal sealed class LoginPackage
 {
     public const string CurrentFormat = "LibreSpotUWP.Login";
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public string Format { get; set; } = CurrentFormat;
     public int Version { get; set; } = CurrentVersion;
@@ -17,7 +17,7 @@ internal sealed class LoginPackage
 
 internal sealed class PlaybackAuthorizationPackage
 {
-    public int AuthVersion { get; set; } = 1;
+    public int AuthVersion { get; set; } = 2;
     public string Kind { get; set; } = "bootstrapToken";
     public string AccessToken { get; set; } = string.Empty;
     public DateTimeOffset? ExpiresAt { get; set; }
