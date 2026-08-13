@@ -90,8 +90,7 @@ public sealed partial class MainWindow : Window
                 _authCancellationTokenSource.Token);
             var playbackAuthorization = await _tokenExchangeService.ExchangePlaybackCodeAsync(
                 PlaybackClientId,
-                playbackResult,
-                webAuthorization.AccountId);
+                playbackResult);
 
             _loginPackage = new LoginPackage
             {
@@ -109,7 +108,7 @@ public sealed partial class MainWindow : Window
             LoginNextButton.IsEnabled = true;
             SetLoginStatus(
                 "Spotify connected",
-                "Library access and playback authorization are ready to import.",
+                "Library access and playback authorization are ready to import. LibreSpotUWP will verify the playback account during its first native connection.",
                 InfoBarSeverity.Success);
         }
         catch (Exception ex)
@@ -342,7 +341,7 @@ public sealed partial class MainWindow : Window
     {
         return new SpotifyAuthOptions(
             PlaybackClientId,
-            new[] { "streaming", "user-read-private" },
+            new[] { "streaming" },
             PlaybackLoopbackPort);
     }
 

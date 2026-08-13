@@ -124,7 +124,7 @@
                                 <StackPanel Spacing="0">
                                     <TextBlock
                                         Style="{StaticResource BodyTextStyle}"
-                                        Text="To continue, press &quot;Login with Spotify&quot;. Spotify may open twice: once for your library and once for playback authorization. Use the same Spotify account both times."
+                                        Text="To continue, press &quot;Login with Spotify&quot;. Spotify may open twice: once for your library and once for playback authorization. Use the same Spotify account both times. LibreSpotUWP verifies the playback account during its first connection before saving it."
                                         TextWrapping="Wrap" />
 
                                     <TextBlock

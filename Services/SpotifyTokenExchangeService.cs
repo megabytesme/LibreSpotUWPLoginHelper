@@ -49,8 +49,7 @@ internal sealed class SpotifyTokenExchangeService
 
     public async Task<PlaybackAuthorizationPackage> ExchangePlaybackCodeAsync(
         string clientId,
-        SpotifyAuthResult authResult,
-        string expectedAccountId)
+        SpotifyAuthResult authResult)
     {
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -79,20 +78,11 @@ internal sealed class SpotifyTokenExchangeService
                 ? seconds
                 : 3600;
 
-        var accessToken = tokenElement.GetString()!;
-        var playbackAccountId = await SpotifyAccountEligibilityService
-            .GetPremiumAccountIdAsync(accessToken);
-        if (!string.Equals(expectedAccountId, playbackAccountId, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                "Playback was authorized with a different Spotify account. Start again and select the same account in both browser windows.");
-        }
-
         return new PlaybackAuthorizationPackage
         {
             AuthVersion = CurrentPlaybackAuthVersion,
             Kind = "bootstrapToken",
-            AccessToken = accessToken,
+            AccessToken = tokenElement.GetString()!,
             ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
         };
     }
